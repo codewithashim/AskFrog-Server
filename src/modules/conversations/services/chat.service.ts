@@ -1,9 +1,19 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Conversation, ConversationStatus } from '../entities/conversation.entity';
-import { Message, MessageRole, MessageStatus } from '../entities/message.entity';
-import { AIOrchestratorService, RAGResponse } from '../../ai/services/ai-orchestrator.service';
+import {
+  Conversation,
+  ConversationStatus,
+} from '../entities/conversation.entity';
+import {
+  Message,
+  MessageRole,
+  MessageStatus,
+} from '../entities/message.entity';
+import {
+  AIOrchestratorService,
+  RAGResponse,
+} from '../../ai/services/ai-orchestrator.service';
 import { ChatbotsService } from '../../chatbots/chatbots.service';
 
 export interface SendMessageDto {
@@ -36,19 +46,21 @@ export class ChatService {
   /**
    * Send a message and get AI response
    */
-  async sendMessage(sendMessageDto: SendMessageDto): Promise<SendMessageResponse> {
+  async sendMessage(
+    sendMessageDto: SendMessageDto,
+  ): Promise<SendMessageResponse> {
     try {
       // Get or create conversation
       let conversation = await this.getOrCreateConversation(
         sendMessageDto.conversationId,
         sendMessageDto.userId,
         sendMessageDto.chatbotId,
-        sendMessageDto.sessionId
+        sendMessageDto.sessionId,
       );
 
       // Save user message
       const userMessage = await this.saveMessage({
-        conversationId: conversation._id.toString(),
+        conversationId: (conversation as any)._id.toString(),
         content: sendMessageDto.content,
         role: MessageRole.USER,
         status: MessageStatus.SENT,
@@ -57,24 +69,24 @@ export class ChatService {
       // Get chatbot settings
       const chatbot = await this.chatbotsService.findOne(
         sendMessageDto.chatbotId,
-        sendMessageDto.userId
+        sendMessageDto.userId,
       );
 
       // Generate AI response using RAG
       const aiResponse = await this.aiOrchestrator.chatWithContext(
-        conversation._id.toString(),
+        (conversation as any)._id.toString(),
         sendMessageDto.content,
         {
           chatbotId: sendMessageDto.chatbotId,
           userId: sendMessageDto.userId,
           namespace: `chatbot_${sendMessageDto.chatbotId}`,
           topK: chatbot.settings?.maxTokens ? 3 : 5,
-        }
+        },
       );
 
       // Save AI response
       const aiMessage = await this.saveMessage({
-        conversationId: conversation._id.toString(),
+        conversationId: (conversation as any)._id.toString(),
         content: aiResponse.answer,
         role: MessageRole.ASSISTANT,
         status: MessageStatus.SENT,
@@ -87,10 +99,13 @@ export class ChatService {
       });
 
       // Update conversation
-      conversation = await this.updateConversation(conversation._id.toString(), {
-        messageCount: conversation.messageCount + 2,
-        lastMessageAt: new Date(),
-      });
+      conversation = await this.updateConversation(
+        (conversation as any)._id.toString(),
+        {
+          messageCount: conversation.messageCount + 2,
+          lastMessageAt: new Date(),
+        },
+      );
 
       // Update chatbot statistics
       await this.chatbotsService.incrementMessages(sendMessageDto.chatbotId);
@@ -113,16 +128,18 @@ export class ChatService {
     conversationId: string,
     userId: string,
     chatbotId: string,
-    sessionId?: string
+    sessionId?: string,
   ): Promise<Conversation> {
     try {
       // Try to find existing conversation
-      let conversation = await this.conversationModel.findOne({
-        _id: conversationId,
-        userId,
-        chatbotId,
-        deletedAt: null,
-      }).exec();
+      let conversation = await this.conversationModel
+        .findOne({
+          _id: conversationId,
+          userId,
+          chatbotId,
+          deletedAt: null,
+        })
+        .exec();
 
       if (!conversation) {
         // Create new conversation
@@ -174,14 +191,16 @@ export class ChatService {
    */
   private async updateConversation(
     conversationId: string,
-    updateData: Partial<Conversation>
+    updateData: Partial<Conversation>,
   ): Promise<Conversation> {
     try {
-      const conversation = await this.conversationModel.findByIdAndUpdate(
-        conversationId,
-        { ...updateData, updatedAt: new Date() },
-        { new: true, runValidators: true }
-      ).exec();
+      const conversation = await this.conversationModel
+        .findByIdAndUpdate(
+          conversationId,
+          { ...updateData, updatedAt: new Date() },
+          { new: true, runValidators: true },
+        )
+        .exec();
 
       if (!conversation) {
         throw new NotFoundException('Conversation not found');
@@ -201,15 +220,17 @@ export class ChatService {
     conversationId: string,
     userId: string,
     limit: number = 50,
-    offset: number = 0
+    offset: number = 0,
   ): Promise<Message[]> {
     try {
       // Verify conversation belongs to user
-      const conversation = await this.conversationModel.findOne({
-        _id: conversationId,
-        userId,
-        deletedAt: null,
-      }).exec();
+      const conversation = await this.conversationModel
+        .findOne({
+          _id: conversationId,
+          userId,
+          deletedAt: null,
+        })
+        .exec();
 
       if (!conversation) {
         throw new NotFoundException('Conversation not found');
@@ -240,7 +261,7 @@ export class ChatService {
     userId: string,
     chatbotId?: string,
     limit: number = 20,
-    offset: number = 0
+    offset: number = 0,
   ): Promise<Conversation[]> {
     try {
       const filter: any = {
@@ -269,19 +290,24 @@ export class ChatService {
   /**
    * Close conversation
    */
-  async closeConversation(conversationId: string, userId: string): Promise<void> {
+  async closeConversation(
+    conversationId: string,
+    userId: string,
+  ): Promise<void> {
     try {
-      const conversation = await this.conversationModel.findOneAndUpdate(
-        {
-          _id: conversationId,
-          userId,
-          deletedAt: null,
-        },
-        {
-          status: ConversationStatus.CLOSED,
-          updatedAt: new Date(),
-        }
-      ).exec();
+      const conversation = await this.conversationModel
+        .findOneAndUpdate(
+          {
+            _id: conversationId,
+            userId,
+            deletedAt: null,
+          },
+          {
+            status: ConversationStatus.CLOSED,
+            updatedAt: new Date(),
+          },
+        )
+        .exec();
 
       if (!conversation) {
         throw new NotFoundException('Conversation not found');
@@ -297,29 +323,33 @@ export class ChatService {
   /**
    * Delete conversation
    */
-  async deleteConversation(conversationId: string, userId: string): Promise<void> {
+  async deleteConversation(
+    conversationId: string,
+    userId: string,
+  ): Promise<void> {
     try {
-      const conversation = await this.conversationModel.findOneAndUpdate(
-        {
-          _id: conversationId,
-          userId,
-          deletedAt: null,
-        },
-        {
-          deletedAt: new Date(),
-          updatedAt: new Date(),
-        }
-      ).exec();
+      const conversation = await this.conversationModel
+        .findOneAndUpdate(
+          {
+            _id: conversationId,
+            userId,
+            deletedAt: null,
+          },
+          {
+            deletedAt: new Date(),
+            updatedAt: new Date(),
+          },
+        )
+        .exec();
 
       if (!conversation) {
         throw new NotFoundException('Conversation not found');
       }
 
       // Soft delete all messages in the conversation
-      await this.messageModel.updateMany(
-        { conversationId },
-        { deletedAt: new Date() }
-      ).exec();
+      await this.messageModel
+        .updateMany({ conversationId }, { deletedAt: new Date() })
+        .exec();
 
       this.logger.log(`Deleted conversation: ${conversationId}`);
     } catch (error) {

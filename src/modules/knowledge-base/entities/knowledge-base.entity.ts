@@ -24,17 +24,17 @@ export class KnowledgeBase extends BaseEntity {
   @Prop()
   description?: string;
 
-  @Prop({ 
-    type: String, 
-    enum: DocumentType, 
-    required: true 
+  @Prop({
+    type: String,
+    enum: DocumentType,
+    required: true,
   })
   type: DocumentType;
 
-  @Prop({ 
-    type: String, 
-    enum: DocumentStatus, 
-    default: DocumentStatus.PROCESSING 
+  @Prop({
+    type: String,
+    enum: DocumentStatus,
+    default: DocumentStatus.PROCESSING,
   })
   status: DocumentStatus;
 

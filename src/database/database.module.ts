@@ -13,7 +13,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         const authSource = configService.get('database.authSource');
 
         let connectionString = uri;
-        
+
         if (username && password) {
           const url = new URL(uri);
           url.username = username;

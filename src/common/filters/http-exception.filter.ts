@@ -34,17 +34,20 @@ export class HttpExceptionFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
-      
+
       if (typeof exceptionResponse === 'string') {
         message = exceptionResponse;
         error = exceptionResponse;
-      } else if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
+      } else if (
+        typeof exceptionResponse === 'object' &&
+        exceptionResponse !== null
+      ) {
         const responseObj = exceptionResponse as any;
         message = responseObj.message || exception.message;
         error = responseObj.error || exceptionResponse.constructor.name;
       } else {
         message = exception.message;
-        error = exceptionResponse.constructor.name;
+        error = 'HttpException';
       }
     } else {
       status = HttpStatus.INTERNAL_SERVER_ERROR;

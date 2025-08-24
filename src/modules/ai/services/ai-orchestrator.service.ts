@@ -43,11 +43,11 @@ export class AIOrchestratorService {
    */
   async processDocument(
     chunks: DocumentChunk[],
-    namespace?: string
+    namespace?: string,
   ): Promise<void> {
     try {
       // Generate embeddings for all chunks
-      const texts = chunks.map(chunk => chunk.content);
+      const texts = chunks.map((chunk) => chunk.content);
       const embeddings = await this.geminiService.generateEmbeddings(texts);
 
       // Prepare vectors for Pinecone
@@ -83,11 +83,12 @@ export class AIOrchestratorService {
       topK?: number;
       temperature?: number;
       maxTokens?: number;
-    } = {}
+    } = {},
   ): Promise<RAGResponse> {
     try {
       // Generate embedding for the question
-      const questionEmbedding = await this.geminiService.generateEmbedding(question);
+      const questionEmbedding =
+        await this.geminiService.generateEmbedding(question);
 
       // Build filter for relevant documents
       const filter: Record<string, any> = {};
@@ -106,7 +107,7 @@ export class AIOrchestratorService {
           namespace: options.namespace,
           filter: Object.keys(filter).length > 0 ? filter : undefined,
           includeMetadata: true,
-        }
+        },
       );
 
       if (similarVectors.length === 0) {
@@ -129,8 +130,8 @@ export class AIOrchestratorService {
 
       // Prepare context from retrieved documents
       const context = similarVectors
-        .map(result => result.metadata?.content || '')
-        .filter(content => content.length > 0)
+        .map((result) => result.metadata?.content || '')
+        .filter((content) => content.length > 0)
         .join('\n\n');
 
       // Create RAG prompt
@@ -144,7 +145,7 @@ export class AIOrchestratorService {
 
       return {
         answer: response,
-        sources: similarVectors.map(result => ({
+        sources: similarVectors.map((result) => ({
           id: result.id,
           content: result.metadata?.content || '',
           score: result.score,
@@ -173,7 +174,7 @@ export class AIOrchestratorService {
       userId?: string;
       namespace?: string;
       topK?: number;
-    } = {}
+    } = {},
   ): Promise<RAGResponse> {
     try {
       // Start chat session if not exists
@@ -184,7 +185,10 @@ export class AIOrchestratorService {
       const ragResponse = await this.generateRAGResponse(message, options);
 
       // Send message to chat session
-      const chatResponse = await this.geminiService.sendMessage(sessionId, message);
+      const chatResponse = await this.geminiService.sendMessage(
+        sessionId,
+        message,
+      );
 
       return {
         answer: chatResponse.content,
@@ -202,12 +206,12 @@ export class AIOrchestratorService {
    */
   async deleteDocumentChunks(
     documentId: string,
-    namespace?: string
+    namespace?: string,
   ): Promise<void> {
     try {
       await this.pineconeService.deleteVectorsByFilter(
         { documentId },
-        namespace
+        namespace,
       );
       this.logger.log(`Deleted chunks for document: ${documentId}`);
     } catch (error) {
@@ -226,13 +230,15 @@ export class AIOrchestratorService {
       userId?: string;
       namespace?: string;
       topK?: number;
-    } = {}
-  ): Promise<Array<{
-    id: string;
-    content: string;
-    score: number;
-    metadata?: Record<string, any>;
-  }>> {
+    } = {},
+  ): Promise<
+    Array<{
+      id: string;
+      content: string;
+      score: number;
+      metadata?: Record<string, any>;
+    }>
+  > {
     try {
       const queryEmbedding = await this.geminiService.generateEmbedding(query);
 
@@ -251,10 +257,10 @@ export class AIOrchestratorService {
           namespace: options.namespace,
           filter: Object.keys(filter).length > 0 ? filter : undefined,
           includeMetadata: true,
-        }
+        },
       );
 
-      return results.map(result => ({
+      return results.map((result) => ({
         id: result.id,
         content: result.metadata?.content || '',
         score: result.score,

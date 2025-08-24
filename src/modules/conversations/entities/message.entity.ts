@@ -27,24 +27,24 @@ export class Message extends BaseEntity {
   @Prop({ required: true })
   content: string;
 
-  @Prop({ 
-    type: String, 
-    enum: MessageRole, 
-    required: true 
+  @Prop({
+    type: String,
+    enum: MessageRole,
+    required: true,
   })
   role: MessageRole;
 
-  @Prop({ 
-    type: String, 
-    enum: MessageType, 
-    default: MessageType.TEXT 
+  @Prop({
+    type: String,
+    enum: MessageType,
+    default: MessageType.TEXT,
   })
   type: MessageType;
 
-  @Prop({ 
-    type: String, 
-    enum: MessageStatus, 
-    default: MessageStatus.SENT 
+  @Prop({
+    type: String,
+    enum: MessageStatus,
+    default: MessageStatus.SENT,
   })
   status: MessageStatus;
 

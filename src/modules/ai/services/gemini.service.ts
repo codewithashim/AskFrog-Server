@@ -1,6 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { GoogleGenerativeAI, GenerativeModel, ChatSession } from '@google/generative-ai';
+import {
+  GoogleGenerativeAI,
+  GenerativeModel,
+  ChatSession,
+} from '@google/generative-ai';
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -45,12 +49,15 @@ export class GeminiService {
   /**
    * Generate text completion
    */
-  async generateText(prompt: string, options?: {
-    temperature?: number;
-    maxTokens?: number;
-    topP?: number;
-    topK?: number;
-  }): Promise<string> {
+  async generateText(
+    prompt: string,
+    options?: {
+      temperature?: number;
+      maxTokens?: number;
+      topP?: number;
+      topK?: number;
+    },
+  ): Promise<string> {
     try {
       const result = await this.model.generateContent({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
@@ -76,16 +83,20 @@ export class GeminiService {
   async startChat(sessionId: string, systemPrompt?: string): Promise<void> {
     try {
       const chat = this.model.startChat({
-        history: systemPrompt ? [
-          {
-            role: 'user',
-            parts: [{ text: systemPrompt }],
-          },
-          {
-            role: 'model',
-            parts: [{ text: 'I understand. I will follow your instructions.' }],
-          },
-        ] : [],
+        history: systemPrompt
+          ? [
+              {
+                role: 'user',
+                parts: [{ text: systemPrompt }],
+              },
+              {
+                role: 'model',
+                parts: [
+                  { text: 'I understand. I will follow your instructions.' },
+                ],
+              },
+            ]
+          : [],
         generationConfig: {
           temperature: 0.7,
           maxOutputTokens: 2048,
@@ -117,7 +128,8 @@ export class GeminiService {
         content: response.text(),
         usage: {
           promptTokens: result.response.usageMetadata?.promptTokenCount || 0,
-          responseTokens: result.response.usageMetadata?.candidatesTokenCount || 0,
+          responseTokens:
+            result.response.usageMetadata?.candidatesTokenCount || 0,
           totalTokens: result.response.usageMetadata?.totalTokenCount || 0,
         },
         finishReason: result.response.candidates?.[0]?.finishReason || 'STOP',
@@ -139,7 +151,7 @@ export class GeminiService {
       }
 
       const history = await chat.getHistory();
-      return history.map(msg => ({
+      return history.map((msg) => ({
         role: msg.role as 'user' | 'assistant',
         content: msg.parts[0]?.text || '',
         timestamp: new Date(),
@@ -163,7 +175,9 @@ export class GeminiService {
    */
   async generateEmbedding(text: string): Promise<EmbeddingResponse> {
     try {
-      const embeddingModel = this.genAI.getGenerativeModel({ model: 'embedding-001' });
+      const embeddingModel = this.genAI.getGenerativeModel({
+        model: 'embedding-001',
+      });
       const result = await embeddingModel.embedContent(text);
       const embedding = await result.embedding;
 
@@ -182,14 +196,18 @@ export class GeminiService {
    */
   async generateEmbeddings(texts: string[]): Promise<EmbeddingResponse[]> {
     try {
-      const embeddingModel = this.genAI.getGenerativeModel({ model: 'embedding-001' });
-      const result = await embeddingModel.embedContent(texts);
-      const embeddings = await result.embeddings;
-
-      return embeddings.map((embedding, index) => ({
-        embedding: embedding.values,
+      const embeddingModel = this.genAI.getGenerativeModel({
         model: 'embedding-001',
-      }));
+      });
+      const result = await embeddingModel.embedContent(texts);
+      const embedding = await result.embedding;
+
+      return [
+        {
+          embedding: embedding.values,
+          model: 'embedding-001',
+        },
+      ];
     } catch (error) {
       this.logger.error('Error generating embeddings:', error);
       throw new Error('Failed to generate embeddings');

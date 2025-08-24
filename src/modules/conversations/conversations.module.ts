@@ -1,11 +1,15 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Conversation, ConversationSchema } from './entities/conversation.entity';
+import {
+  Conversation,
+  ConversationSchema,
+} from './entities/conversation.entity';
 import { Message, MessageSchema } from './entities/message.entity';
 import { ChatService } from './services/chat.service';
 import { ChatController } from './controllers/chat.controller';
 import { AIModule } from '../ai/ai.module';
 import { ChatbotsModule } from '../chatbots/chatbots.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -15,6 +19,7 @@ import { ChatbotsModule } from '../chatbots/chatbots.module';
     ]),
     AIModule,
     ChatbotsModule,
+    forwardRef(() => AuthModule),
   ],
   controllers: [ChatController],
   providers: [ChatService],

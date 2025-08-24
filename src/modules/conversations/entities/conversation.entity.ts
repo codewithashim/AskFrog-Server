@@ -12,10 +12,10 @@ export class Conversation extends BaseEntity {
   @Prop({ maxlength: 255 })
   title?: string;
 
-  @Prop({ 
-    type: String, 
-    enum: ConversationStatus, 
-    default: ConversationStatus.ACTIVE 
+  @Prop({
+    type: String,
+    enum: ConversationStatus,
+    default: ConversationStatus.ACTIVE,
   })
   status: ConversationStatus;
 

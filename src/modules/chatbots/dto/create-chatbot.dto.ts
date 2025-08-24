@@ -1,4 +1,10 @@
-import { IsString, IsOptional, IsEnum, IsBoolean, IsObject } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsBoolean,
+  IsObject,
+} from 'class-validator';
 import { ChatbotType } from '../entities/chatbot.entity';
 
 export class CreateChatbotDto {

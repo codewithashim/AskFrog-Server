@@ -24,8 +24,13 @@ export class ChatbotsController {
 
   @Post()
   @UseGuards(AuthGuard)
-  create(@Body() createChatbotDto: CreateChatbotDto, @CurrentUser() user: JwtPayload) {
-    return this.chatbotsService.create(createChatbotDto, { id: user.sub } as any);
+  create(
+    @Body() createChatbotDto: CreateChatbotDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.chatbotsService.create(createChatbotDto, {
+      id: user.sub,
+    } as any);
   }
 
   @Get()

@@ -1,13 +1,10 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 import { LoginDto, RegisterDto, RefreshTokenDto } from './dto/login.dto';
 import { User } from '../users/entities/user.entity';
+import { UserStatus } from '../users/entities/user.entity';
 
 export interface TokenPayload {
   sub: string;
@@ -31,7 +28,7 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<User> {
     const user = await this.usersService.findByEmail(email);
-    
+
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -41,7 +38,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (user.status !== 'active') {
+    if (user.status !== UserStatus.ACTIVE) {
       throw new UnauthorizedException('Account is not active');
     }
 
@@ -50,9 +47,15 @@ export class AuthService {
 
   async login(loginDto: LoginDto): Promise<TokenResponse> {
     const user = await this.validateUser(loginDto.email, loginDto.password);
-    
-    await this.usersService.updateLastLogin(user.id);
-    
+
+    type UserWithId = User & { _id: { toString(): string } | string };
+    const userWithId = user as unknown as UserWithId;
+    const id =
+      typeof userWithId._id === 'string'
+        ? userWithId._id
+        : userWithId._id.toString();
+    await this.usersService.updateLastLogin(id);
+
     return this.generateTokens(user);
   }
 
@@ -63,20 +66,29 @@ export class AuthService {
 
   async refreshToken(refreshTokenDto: RefreshTokenDto): Promise<TokenResponse> {
     try {
-      const payload = await this.jwtService.verifyAsync(refreshTokenDto.refreshToken, {
-        secret: this.configService.get('jwt.refreshSecret'),
-      });
+      const payload = await this.jwtService.verifyAsync<TokenPayload>(
+        refreshTokenDto.refreshToken,
+        {
+          secret: this.configService.get('jwt.refreshSecret'),
+        },
+      );
 
       const user = await this.usersService.findOne(payload.sub);
       return this.generateTokens(user);
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
 
   private async generateTokens(user: User): Promise<TokenResponse> {
     const payload: TokenPayload = {
-      sub: user.id,
+      sub: (() => {
+        type UserWithId = User & { _id: { toString(): string } | string };
+        const userWithId = user as unknown as UserWithId;
+        return typeof userWithId._id === 'string'
+          ? userWithId._id
+          : userWithId._id.toString();
+      })(),
       email: user.email,
       role: user.role,
     };
@@ -95,7 +107,9 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
-      expiresIn: this.getTokenExpirationTime(this.configService.get('jwt.expiresIn')),
+      expiresIn: this.getTokenExpirationTime(
+        this.configService.get('jwt.expiresIn') || '7d',
+      ),
     };
   }
 
@@ -109,7 +123,7 @@ export class AuthService {
 
     const unit = expiresIn.slice(-1);
     const value = parseInt(expiresIn.slice(0, -1));
-    
+
     return value * (timeMap[unit] || 1);
   }
 }

@@ -27,7 +27,9 @@ export class PineconeService {
 
   constructor(private configService: ConfigService) {
     const apiKey = this.configService.get('vectorStore.pineconeApiKey');
-    const environment = this.configService.get('vectorStore.pineconeEnvironment');
+    const environment = this.configService.get(
+      'vectorStore.pineconeEnvironment',
+    );
 
     if (!apiKey) {
       throw new Error('PINECONE_API_KEY is required');
@@ -35,7 +37,6 @@ export class PineconeService {
 
     this.pinecone = new Pinecone({
       apiKey,
-      environment,
     });
   }
 
@@ -46,7 +47,7 @@ export class PineconeService {
     try {
       const indexName = this.configService.get('vectorStore.pineconeIndexName');
       this.index = this.pinecone.index(indexName);
-      
+
       // Test the connection
       await this.index.describeIndexStats();
       this.logger.log(`Pinecone index '${indexName}' initialized successfully`);
@@ -67,7 +68,7 @@ export class PineconeService {
 
       const response = await this.index.upsert(vectors);
       this.logger.log(`Upserted ${vectors.length} vectors to Pinecone`);
-      
+
       return {
         upsertedCount: response.upsertedCount || vectors.length,
       };
@@ -87,7 +88,7 @@ export class PineconeService {
       namespace?: string;
       filter?: Record<string, any>;
       includeMetadata?: boolean;
-    } = {}
+    } = {},
   ): Promise<QueryResult[]> {
     try {
       if (!this.index) {
@@ -102,7 +103,7 @@ export class PineconeService {
         includeMetadata: options.includeMetadata !== false,
       });
 
-      return queryResponse.matches.map(match => ({
+      return queryResponse.matches.map((match) => ({
         id: match.id,
         score: match.score || 0,
         metadata: match.metadata,
@@ -133,7 +134,10 @@ export class PineconeService {
   /**
    * Delete vectors by filter
    */
-  async deleteVectorsByFilter(filter: Record<string, any>, namespace?: string): Promise<void> {
+  async deleteVectorsByFilter(
+    filter: Record<string, any>,
+    namespace?: string,
+  ): Promise<void> {
     try {
       if (!this.index) {
         await this.initializeIndex();
@@ -142,7 +146,10 @@ export class PineconeService {
       await this.index.deleteMany([], { filter, namespace });
       this.logger.log('Deleted vectors by filter from Pinecone');
     } catch (error) {
-      this.logger.error('Error deleting vectors by filter from Pinecone:', error);
+      this.logger.error(
+        'Error deleting vectors by filter from Pinecone:',
+        error,
+      );
       throw new Error('Failed to delete vectors by filter');
     }
   }
@@ -150,7 +157,11 @@ export class PineconeService {
   /**
    * Update vector metadata
    */
-  async updateMetadata(id: string, metadata: Record<string, any>, namespace?: string): Promise<void> {
+  async updateMetadata(
+    id: string,
+    metadata: Record<string, any>,
+    namespace?: string,
+  ): Promise<void> {
     try {
       if (!this.index) {
         await this.initializeIndex();
@@ -161,7 +172,7 @@ export class PineconeService {
         setMetadata: metadata,
         namespace,
       });
-      
+
       this.logger.log(`Updated metadata for vector ${id}`);
     } catch (error) {
       this.logger.error('Error updating vector metadata:', error);
@@ -189,19 +200,22 @@ export class PineconeService {
   /**
    * Fetch vectors by IDs
    */
-  async fetchVectors(ids: string[], namespace?: string): Promise<VectorRecord[]> {
+  async fetchVectors(
+    ids: string[],
+    namespace?: string,
+  ): Promise<VectorRecord[]> {
     try {
       if (!this.index) {
         await this.initializeIndex();
       }
 
       const response = await this.index.fetch(ids, { namespace });
-      
+
       return Object.entries(response.vectors).map(([id, vector]) => ({
         id,
-        values: vector.values,
-        metadata: vector.metadata,
-        namespace: vector.namespace,
+        values: (vector as any).values,
+        metadata: (vector as any).metadata,
+        namespace: (vector as any).namespace,
       }));
     } catch (error) {
       this.logger.error('Error fetching vectors:', error);

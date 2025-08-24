@@ -36,17 +36,17 @@ export class User extends BaseEntity {
   @Prop({ required: true })
   password: string;
 
-  @Prop({ 
-    type: String, 
-    enum: UserRole, 
-    default: UserRole.USER 
+  @Prop({
+    type: String,
+    enum: UserRole,
+    default: UserRole.USER,
   })
   role: UserRole;
 
-  @Prop({ 
-    type: String, 
-    enum: UserStatus, 
-    default: UserStatus.ACTIVE 
+  @Prop({
+    type: String,
+    enum: UserStatus,
+    default: UserStatus.ACTIVE,
   })
   status: UserStatus;
 
@@ -74,7 +74,7 @@ export class User extends BaseEntity {
 export const UserSchema = SchemaFactory.createForClass(User);
 
 // Hash password before saving
-UserSchema.pre('save', async function(next) {
+UserSchema.pre('save', async function (next) {
   if (this.isModified('password')) {
     const saltRounds = 12;
     this.password = await bcrypt.hash(this.password, saltRounds);
@@ -83,7 +83,7 @@ UserSchema.pre('save', async function(next) {
 });
 
 // Add virtual for fullName
-UserSchema.virtual('fullName').get(function() {
+UserSchema.virtual('fullName').get(function () {
   return `${this.firstName} ${this.lastName}`;
 });
 

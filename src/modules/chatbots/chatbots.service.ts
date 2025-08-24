@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Chatbot, ChatbotStatus } from './entities/chatbot.entity';
@@ -11,7 +15,10 @@ export class ChatbotsService {
     private readonly chatbotModel: Model<Chatbot>,
   ) {}
 
-  async create(createChatbotDto: CreateChatbotDto, user: any): Promise<Chatbot> {
+  async create(
+    createChatbotDto: CreateChatbotDto,
+    user: any,
+  ): Promise<Chatbot> {
     const chatbot = new this.chatbotModel({
       ...createChatbotDto,
       userId: user.id,
@@ -22,17 +29,22 @@ export class ChatbotsService {
   }
 
   async findAll(userId: string): Promise<Chatbot[]> {
-    return this.chatbotModel.find({
-      userId,
-      deletedAt: null,
-    }).sort({ createdAt: -1 }).exec();
+    return this.chatbotModel
+      .find({
+        userId,
+        deletedAt: null,
+      })
+      .sort({ createdAt: -1 })
+      .exec();
   }
 
   async findOne(id: string, userId: string): Promise<Chatbot> {
-    const chatbot = await this.chatbotModel.findOne({
-      _id: id,
-      deletedAt: null,
-    }).exec();
+    const chatbot = await this.chatbotModel
+      .findOne({
+        _id: id,
+        deletedAt: null,
+      })
+      .exec();
 
     if (!chatbot) {
       throw new NotFoundException(`Chatbot with ID ${id} not found`);
@@ -46,12 +58,14 @@ export class ChatbotsService {
   }
 
   async findPublic(id: string): Promise<Chatbot> {
-    const chatbot = await this.chatbotModel.findOne({
-      _id: id,
-      isPublic: true,
-      status: ChatbotStatus.ACTIVE,
-      deletedAt: null,
-    }).exec();
+    const chatbot = await this.chatbotModel
+      .findOne({
+        _id: id,
+        isPublic: true,
+        status: ChatbotStatus.ACTIVE,
+        deletedAt: null,
+      })
+      .exec();
 
     if (!chatbot) {
       throw new NotFoundException(`Public chatbot with ID ${id} not found`);
@@ -60,14 +74,20 @@ export class ChatbotsService {
     return chatbot;
   }
 
-  async update(id: string, updateChatbotDto: Partial<CreateChatbotDto>, userId: string): Promise<Chatbot> {
+  async update(
+    id: string,
+    updateChatbotDto: Partial<CreateChatbotDto>,
+    userId: string,
+  ): Promise<Chatbot> {
     const chatbot = await this.findOne(id, userId);
-    
-    const updatedChatbot = await this.chatbotModel.findByIdAndUpdate(
-      id,
-      { ...updateChatbotDto, updatedAt: new Date() },
-      { new: true, runValidators: true }
-    ).exec();
+
+    const updatedChatbot = await this.chatbotModel
+      .findByIdAndUpdate(
+        id,
+        { ...updateChatbotDto, updatedAt: new Date() },
+        { new: true, runValidators: true },
+      )
+      .exec();
 
     if (!updatedChatbot) {
       throw new NotFoundException(`Chatbot with ID ${id} not found`);
@@ -78,17 +98,25 @@ export class ChatbotsService {
 
   async remove(id: string, userId: string): Promise<void> {
     const chatbot = await this.findOne(id, userId);
-    await this.chatbotModel.findByIdAndUpdate(id, {
-      deletedAt: new Date(),
-    }).exec();
+    await this.chatbotModel
+      .findByIdAndUpdate(id, {
+        deletedAt: new Date(),
+      })
+      .exec();
   }
 
-  async updateStatus(id: string, status: ChatbotStatus, userId: string): Promise<Chatbot> {
-    const chatbot = await this.chatbotModel.findByIdAndUpdate(
-      id,
-      { status, updatedAt: new Date() },
-      { new: true, runValidators: true }
-    ).exec();
+  async updateStatus(
+    id: string,
+    status: ChatbotStatus,
+    userId: string,
+  ): Promise<Chatbot> {
+    const chatbot = await this.chatbotModel
+      .findByIdAndUpdate(
+        id,
+        { status, updatedAt: new Date() },
+        { new: true, runValidators: true },
+      )
+      .exec();
 
     if (!chatbot) {
       throw new NotFoundException(`Chatbot with ID ${id} not found`);
@@ -99,7 +127,7 @@ export class ChatbotsService {
 
   async generateEmbedCode(id: string, userId: string): Promise<string> {
     const chatbot = await this.findOne(id, userId);
-    
+
     const embedCode = `
       <div id="askforge-chatbot-${chatbot._id}"></div>
       <script>
@@ -118,23 +146,29 @@ export class ChatbotsService {
       </script>
     `;
 
-    await this.chatbotModel.findByIdAndUpdate(id, {
-      embedCode,
-      updatedAt: new Date(),
-    }).exec();
-    
+    await this.chatbotModel
+      .findByIdAndUpdate(id, {
+        embedCode,
+        updatedAt: new Date(),
+      })
+      .exec();
+
     return embedCode;
   }
 
   async incrementConversations(id: string): Promise<void> {
-    await this.chatbotModel.findByIdAndUpdate(id, {
-      $inc: { totalConversations: 1 },
-    }).exec();
+    await this.chatbotModel
+      .findByIdAndUpdate(id, {
+        $inc: { totalConversations: 1 },
+      })
+      .exec();
   }
 
   async incrementMessages(id: string): Promise<void> {
-    await this.chatbotModel.findByIdAndUpdate(id, {
-      $inc: { totalMessages: 1 },
-    }).exec();
+    await this.chatbotModel
+      .findByIdAndUpdate(id, {
+        $inc: { totalMessages: 1 },
+      })
+      .exec();
   }
 }

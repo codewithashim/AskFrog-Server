@@ -14,7 +14,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   // Security middleware
-  app.use(helmet());
+  app.use(helmet.default());
   app.use(compression());
 
   // CORS configuration
@@ -33,7 +33,7 @@ async function bootstrap() {
   });
 
   // Global prefix
-  app.setGlobalPrefix(configService.get('app.apiPrefix'));
+  app.setGlobalPrefix(configService.get('app.apiPrefix') || 'api/v1');
 
   // Global validation pipe
   app.useGlobalPipes(
@@ -49,8 +49,9 @@ async function bootstrap() {
 
   // Request ID middleware
   app.use((req, res, next) => {
-    const requestId = req.headers['x-request-id'] || 
-                     `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const requestId =
+      req.headers['x-request-id'] ||
+      `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     req.headers['x-request-id'] = requestId;
     res.setHeader('X-Request-ID', requestId);
     next();
@@ -60,7 +61,10 @@ async function bootstrap() {
   await app.listen(port);
 
   const logger = app.get(LoggerService);
-  logger.log(`Application is running on: http://localhost:${port}`, 'Bootstrap');
+  logger.log(
+    `Application is running on: http://localhost:${port}`,
+    'Bootstrap',
+  );
   logger.log(`Environment: ${configService.get('app.nodeEnv')}`, 'Bootstrap');
   logger.log(`API Prefix: ${configService.get('app.apiPrefix')}`, 'Bootstrap');
 }

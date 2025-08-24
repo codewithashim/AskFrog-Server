@@ -52,8 +52,8 @@ export class ChatController {
     return this.chatService.getUserConversations(
       user.sub,
       chatbotId,
-      parseInt(limit) || 20,
-      parseInt(offset) || 0,
+      limit ? parseInt(limit) : 20,
+      offset ? parseInt(offset) : 0,
     );
   }
 
@@ -68,8 +68,8 @@ export class ChatController {
     return this.chatService.getConversationMessages(
       conversationId,
       user.sub,
-      parseInt(limit) || 50,
-      parseInt(offset) || 0,
+      limit ? parseInt(limit) : 50,
+      offset ? parseInt(offset) : 0,
     );
   }
 

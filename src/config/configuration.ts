@@ -11,21 +11,23 @@ export const databaseConfig = registerAs('database', () => ({
 export const jwtConfig = registerAs('jwt', () => ({
   secret: process.env.JWT_SECRET || 'fallback-secret-key',
   expiresIn: process.env.JWT_EXPIRES_IN || '7d',
-  refreshSecret: process.env.JWT_REFRESH_SECRET || 'fallback-refresh-secret-key',
+  refreshSecret:
+    process.env.JWT_REFRESH_SECRET || 'fallback-refresh-secret-key',
+
   refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
 }));
 
 export const appConfig = registerAs('app', () => ({
-  port: parseInt(process.env.PORT, 10) || 3000,
+  port: parseInt(process.env.PORT || '3000', 10) || 3000,
   nodeEnv: process.env.NODE_ENV || 'development',
   apiPrefix: process.env.API_PREFIX || 'api/v1',
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
 }));
 
 export const securityConfig = registerAs('security', () => ({
-  bcryptRounds: parseInt(process.env.BCRYPT_ROUNDS, 10) || 12,
-  rateLimitTtl: parseInt(process.env.RATE_LIMIT_TTL, 10) || 60,
-  rateLimitLimit: parseInt(process.env.RATE_LIMIT_LIMIT, 10) || 100,
+  bcryptRounds: parseInt(process.env.BCRYPT_ROUNDS || '12', 10) || 12,
+  rateLimitTtl: parseInt(process.env.RATE_LIMIT_TTL || '60', 10) || 60,
+  rateLimitLimit: parseInt(process.env.RATE_LIMIT_LIMIT || '100', 10) || 100,
 }));
 
 export const loggingConfig = registerAs('logging', () => ({
@@ -34,7 +36,9 @@ export const loggingConfig = registerAs('logging', () => ({
 }));
 
 export const uploadConfig = registerAs('upload', () => ({
-  maxFileSize: parseInt(process.env.MAX_FILE_SIZE, 10) || 10485760, // 10MB
+  maxFileSize:
+    parseInt(process.env.MAX_FILE_SIZE || '10485760', 10) || 10485760, // 10MB
+
   uploadPath: process.env.UPLOAD_PATH || 'uploads',
 }));
 

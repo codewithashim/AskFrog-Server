@@ -24,17 +24,17 @@ export class Chatbot extends BaseEntity {
   @Prop()
   description?: string;
 
-  @Prop({ 
-    type: String, 
-    enum: ChatbotStatus, 
-    default: ChatbotStatus.DRAFT 
+  @Prop({
+    type: String,
+    enum: ChatbotStatus,
+    default: ChatbotStatus.DRAFT,
   })
   status: ChatbotStatus;
 
-  @Prop({ 
-    type: String, 
-    enum: ChatbotType, 
-    default: ChatbotType.GENERAL 
+  @Prop({
+    type: String,
+    enum: ChatbotType,
+    default: ChatbotType.GENERAL,
   })
   type: ChatbotType;
 

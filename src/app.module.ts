@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
@@ -12,7 +13,7 @@ import { ConversationsModule } from './modules/conversations/conversations.modul
 import { AIModule } from './modules/ai/ai.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
-import { AuthGuard } from './common/guards/auth.guard';
+
 import { LoggerService } from './common/services/logger.service';
 import {
   appConfig,
@@ -37,8 +38,8 @@ import { validationSchema } from './config/validation.schema';
         securityConfig,
         loggingConfig,
         uploadConfig,
-        redisConfig,
-        externalApiConfig,
+        aiConfig,
+        vectorStoreConfig,
       ],
       validationSchema,
       validationOptions: {
@@ -46,12 +47,10 @@ import { validationSchema } from './config/validation.schema';
         abortEarly: true,
       },
     }),
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60,
-        limit: 100,
-      },
-    ]),
+    ThrottlerModule.forRoot({
+      ttl: 60,
+      limit: 100,
+    } as unknown as import('@nestjs/throttler').ThrottlerModuleOptions),
     DatabaseModule,
     UsersModule,
     AuthModule,
@@ -70,10 +69,6 @@ import { validationSchema } from './config/validation.schema';
     {
       provide: APP_INTERCEPTOR,
       useClass: TransformInterceptor,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: AuthGuard,
     },
   ],
 })
